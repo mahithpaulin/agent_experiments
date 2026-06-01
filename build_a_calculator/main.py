@@ -1,23 +1,24 @@
-import matplotlib.pyplot as plt
 from utils import add, subtract, multiply, divide
 
-def calculator():
-    num1 = 10
-    num2 = 2
+def calculate(a, b):
+    results = {
+        "add": add(a, b),
+        "subtract": subtract(a, b),
+        "multiply": multiply(a, b),
+        "divide": divide(a, b)
+    }
+    return results
 
-    add_result = add(num1, num2)
-    subtract_result = subtract(num1, num2)
-    multiply_result = multiply(num1, num2)
-    divide_result = divide(num1, num2)
-
-    print(f"Addition: {num1} + {num2} = {add_result}")
-    print(f"Subtraction: {num1} - {num2} = {subtract_result}")
-    print(f"Multiplication: {num1} * {num2} = {multiply_result}")
-    print(f"Division: {num1} / {num2} = {divide_result}")
-
-    plt.bar(['Addition', 'Subtraction', 'Multiplication', 'Division'], [add_result, subtract_result, multiply_result, divide_result])
-    plt.savefig('calculator_results.png')
-    plt.show()
+def main():
+    pairs = [(10, 5), (3, 0), (-2, 8)]
+    for a, b in pairs:
+        res = calculate(a, b)
+        print(f"Calculations for {a} and {b}:")
+        print(f"Add: {res['add']}")
+        print(f"Subtract: {res['subtract']}")
+        print(f"Multiply: {res['multiply']}")
+        print(f"Divide: {res['divide']}")
+        print()
 
 if __name__ == "__main__":
-    calculator()
+    main()
