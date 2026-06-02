@@ -1,24 +1,27 @@
-from utils import add, subtract, multiply, divide
 import pytest
+from calculator import Calculator
 
-def test_add():
-    assert add(2, 3) == 5
-    assert add(-1, 1) == 0
-    assert add(0.1, 0.2) == pytest.approx(0.3)
+def test_addition():
+    calc = Calculator()
+    assert calc.add(3, 5) == 8
+    assert calc.add(-3, 5) == 2
+    assert calc.add(0, 0) == 0
 
-def test_subtract():
-    assert subtract(5, 3) == 2
-    assert subtract(0, 5) == -5
-    assert subtract(0.3, 0.1) == pytest.approx(0.2)
+def test_subtraction():
+    calc = Calculator()
+    assert calc.subtract(10, 5) == 5
+    assert calc.subtract(0, 5) == -5
+    assert calc.subtract(-3, -7) == 4
 
-def test_multiply():
-    assert multiply(2, 3) == 6
-    assert multiply(-1, 5) == -5
-    assert multiply(0.1, 0.2) == pytest.approx(0.02)
+def test_multiplication():
+    calc = Calculator()
+    assert calc.multiply(3, 5) == 15
+    assert calc.multiply(-3, 5) == -15
+    assert calc.multiply(0, 5) == 0
 
-def test_divide():
-    assert divide(6, 3) == 2
-    assert divide(-6, 2) == -3
-    assert divide(0.3, 0.1) == pytest.approx(3)
-    with pytest.raises(ZeroDivisionError):
-        divide(1, 0)
+def test_division():
+    calc = Calculator()
+    assert calc.divide(10, 2) == pytest.approx(5)
+    assert calc.divide(7, 3) == pytest.approx(2.333333, rel=1e-5)
+    with pytest.raises(ValueError):
+        calc.divide(10, 0)
