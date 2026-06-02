@@ -1,22 +1,13 @@
-def validate_numbers(a, b):
-    if not isinstance(a, (int, float)) or not isinstance(b, (int, float)):
-        raise TypeError("Both arguments must be numbers")
-    return True
-
-def safe_divide(a, b):
-    validate_numbers(a, b)
-    if b == 0:
-        raise ValueError("Cannot divide by zero")
-    return a / b
-
-def safe_multiply(a, b):
-    validate_numbers(a, b)
-    return a * b
-
-def safe_add(a, b):
-    validate_numbers(a, b)
+def add(a, b):
+    """Return the sum of a and b."""
     return a + b
 
-def safe_subtract(a, b):
-    validate_numbers(a, b)
+
+def subtract(a, b):
+    """Return the difference of a and b (a - b)."""
     return a - b
+
+
+def multiply(a, b):
+    """Return the product of a and b."""
+    return a * b
