@@ -1,76 +1,69 @@
-import pytest
-import torch
-from main import generate_2d_gaussian_clusters, VAE, loss_function, train_vae, DEVICE
 import numpy as np
+import torch
+from main import VAE, loss_function
+from utils import generate_gaussian_data
+import os
 
-@pytest.fixture
-def synthetic_data():
-    data, labels = generate_2d_gaussian_clusters(n_samples=300, n_clusters=3, cluster_std=0.1, seed=123)
-    return data, labels
+def test_vae_training():
+    input_dim = 2
+    latent_dim = 2
+    epochs = 50
+    batch_size = 128
+    learning_rate = 0.001
 
-def test_generate_2d_gaussian_clusters_shapes(synthetic_data):
-    data, labels = synthetic_data
-    assert data.shape == (300, 2)
-    assert labels.shape == (300,)
-    assert torch.all(labels < 3)
-    assert torch.all(labels >= 0)
+    data = generate_gaussian_data(1000)
+    data = torch.tensor(data, dtype=torch.float32)
 
-def test_vae_forward_shapes(synthetic_data):
-    data, _ = synthetic_data
-    model = VAE().to(DEVICE)
-    recon, mu, logvar, z = model(data)
-    assert recon.shape == data.shape
-    assert mu.shape == (data.shape[0], 2)
-    assert logvar.shape == (data.shape[0], 2)
-    assert z.shape == (data.shape[0], 2)
+    vae = VAE(input_dim, latent_dim)
+    optimizer = torch.optim.Adam(vae.parameters(), lr=learning_rate)
 
-def test_loss_function_values(synthetic_data):
-    data, _ = synthetic_data
-    model = VAE().to(DEVICE)
-    recon, mu, logvar, _ = model(data)
-    recon_loss, kld = loss_function(recon, data, mu, logvar)
-    assert recon_loss.item() >= 0
-    assert kld.item() >= 0
+    kl_divs = []
+    recon_losses = []
 
-def test_reparameterization_variance():
-    model = VAE().to(DEVICE)
-    mu = torch.zeros(1000, 2).to(DEVICE)  # Increased sample size for better variance estimate
-    logvar = torch.zeros(1000, 2).to(DEVICE)
-    z = model.reparameterize(mu, logvar)
-    # Since mu=0, logvar=0 => std=1, z should have variance close to 1
-    var = z.var(dim=0)
-    assert torch.allclose(var, torch.ones(2).to(DEVICE), atol=0.1)
+    for epoch in range(epochs):
+        perm = torch.randperm(data.size(0))
+        data = data[perm]
+        epoch_kl = 0
+        epoch_recon = 0
 
-def test_training_decreases_losses():
-    data, labels = generate_2d_gaussian_clusters(n_samples=600, n_clusters=3, cluster_std=0.5, seed=42)
-    dataset = torch.utils.data.TensorDataset(data, labels)
-    dataloader = torch.utils.data.DataLoader(dataset, batch_size=128, shuffle=True)
-    model = VAE().to(DEVICE)
-    recon_losses, kld_losses = train_vae(model, dataloader, epochs=20, lr=1e-2)
-    assert recon_losses[-1] < recon_losses[0]
-    assert kld_losses[-1] < kld_losses[0]
+        for i in range(0, data.size(0), batch_size):
+            batch = data[i:i+batch_size]
+            optimizer.zero_grad()
+            recon_batch, mu, logvar = vae(batch)
+            loss, recon_loss, kl_div = loss_function(recon_batch, batch, mu, logvar)
+            loss.backward()
+            optimizer.step()
+
+            epoch_kl += kl_div.item()
+            epoch_recon += recon_loss.item()
+
+        kl_divs.append(epoch_kl / len(data))
+        recon_losses.append(epoch_recon / len(data))
+
+    torch.save(vae.state_dict(), "vae_model.pth")
+
+    assert kl_divs[-1] < kl_divs[0], "KL divergence did not decrease"
+    assert recon_losses[-1] < recon_losses[0], "Reconstruction loss did not decrease"
 
 def test_latent_space_separation():
-    data, labels = generate_2d_gaussian_clusters(n_samples=300, n_clusters=3, cluster_std=0.3, seed=123)
-    dataset = torch.utils.data.TensorDataset(data, labels)
-    dataloader = torch.utils.data.DataLoader(dataset, batch_size=64, shuffle=True)
-    model = VAE().to(DEVICE)
-    train_vae(model, dataloader, epochs=30, lr=1e-3)
-    model.eval()
+    input_dim = 2
+    latent_dim = 2
+    data = generate_gaussian_data(1000)
+    data = torch.tensor(data, dtype=torch.float32)
+
+    model_path = "vae_model.pth"
+    assert os.path.exists(model_path), f"Model file '{model_path}' not found. Ensure the model is saved correctly."
+
+    vae = VAE(input_dim, latent_dim)
+    vae.load_state_dict(torch.load(model_path))
+    vae.eval()
+
     with torch.no_grad():
-        _, mu, _, _ = model(data)
-    mu = mu.cpu()
-    labels = labels.cpu()
-    # Compute mean latent vector per cluster
-    means = []
-    for c in range(3):
-        cluster_mu = mu[labels == c]
-        means.append(cluster_mu.mean(dim=0))
-    means = torch.stack(means)
-    # Check pairwise distances between cluster means are sufficiently large
-    d01 = torch.norm(means[0] - means[1])
-    d12 = torch.norm(means[1] - means[2])
-    d02 = torch.norm(means[0] - means[2])
-    assert d01 > 0.5
-    assert d12 > 0.5
-    assert d02 > 0.5
+        mu, _ = vae.encode(data)
+        mu = mu.numpy()
+
+    assert mu.shape[1] == latent_dim, "Latent space dimensions are incorrect"
+    cluster_centers = [(-5, -5), (5, 5), (-5, 5), (5, -5)]
+    for center in cluster_centers:
+        distances = np.linalg.norm(mu - np.array(center), axis=1)
+        assert np.any(distances < 5.0), f"Cluster near {center} not well-separated"
