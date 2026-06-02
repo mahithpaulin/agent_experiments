@@ -1,22 +1,29 @@
-class Calculator:
-    def add(self, a, b):
-        return a + b
+import sys
+from utils import add, subtract, multiply
 
-    def subtract(self, a, b):
-        return a - b
+def main():
+    if len(sys.argv) != 4:
+        print("Usage: python main.py <number1> <operator> <number2>")
+        return
+    try:
+        num1 = float(sys.argv[1])
+        num2 = float(sys.argv[3])
+    except ValueError:
+        print("Both operands must be numbers")
+        return
 
-    def multiply(self, a, b):
-        return a * b
+    operator = sys.argv[2]
+    if operator == '+':
+        result = add(num1, num2)
+    elif operator == '-':
+        result = subtract(num1, num2)
+    elif operator == '*':
+        result = multiply(num1, num2)
+    else:
+        print(f"Unsupported operator '{operator}'")
+        return
 
-    def divide(self, a, b):
-        if b == 0:
-            raise ValueError("Cannot divide by zero")
-        return a / b
+    print(result)
 
 if __name__ == "__main__":
-    calc = Calculator()
-    result_add = calc.add(5, 3)
-    result_subtract = calc.subtract(5, 3)
-    result_multiply = calc.multiply(5, 3)
-    result_divide = calc.divide(5, 3)
-    print(f"Addition: {result_add}, Subtraction: {result_subtract}, Multiplication: {result_multiply}, Division: {result_divide}")
+    main()
