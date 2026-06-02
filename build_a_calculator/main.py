@@ -1,34 +1,22 @@
-from utils import add, subtract, multiply, divide
+class Calculator:
+    def add(self, a, b):
+        return a + b
 
-def calculator():
-    print("Simple Calculator")
-    print("Operations: add, subtract, multiply, divide")
-    while True:
-        op = input("Enter operation (or 'exit' to quit): ").strip().lower()
-        if op == 'exit':
-            print("Exiting calculator.")
-            break
-        if op not in ('add', 'subtract', 'multiply', 'divide'):
-            print("Invalid operation. Try again.")
-            continue
-        try:
-            x = float(input("Enter first number: "))
-            y = float(input("Enter second number: "))
-        except ValueError:
-            print("Invalid number input. Try again.")
-            continue
-        try:
-            if op == 'add':
-                result = add(x, y)
-            elif op == 'subtract':
-                result = subtract(x, y)
-            elif op == 'multiply':
-                result = multiply(x, y)
-            elif op == 'divide':
-                result = divide(x, y)
-            print(f"Result: {result}")
-        except ZeroDivisionError:
-            print("Error: Division by zero.")
+    def subtract(self, a, b):
+        return a - b
+
+    def multiply(self, a, b):
+        return a * b
+
+    def divide(self, a, b):
+        if b == 0:
+            raise ValueError("Cannot divide by zero")
+        return a / b
 
 if __name__ == "__main__":
-    calculator()
+    calc = Calculator()
+    result_add = calc.add(5, 3)
+    result_subtract = calc.subtract(5, 3)
+    result_multiply = calc.multiply(5, 3)
+    result_divide = calc.divide(5, 3)
+    print(f"Addition: {result_add}, Subtraction: {result_subtract}, Multiplication: {result_multiply}, Division: {result_divide}")
