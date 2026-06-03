@@ -1,16 +1,19 @@
-import operator
+import sys
+from utils import add, subtract, multiply, divide
 
-class NaturalLanguageCalculator:
-    def __init__(self):
-        self.operations = {
-            "add": operator.add,
-            "subtract": operator.sub,
-            "multiply": operator.mul,
-            "divide": operator.truediv
-        }
+def main() -> None:
+    """Simple demonstration of calculator operations."""
+    a, b = 12, 4
+    try:
+        print(f"{a} + {b} = {add(a, b)}")
+        print(f"{a} - {b} = {subtract(a, b)}")
+        print(f"{a} * {b} = {multiply(a, b)}")
+        print(f"{a} / {b} = {divide(a, b)}")
+        # Edge case demonstration
+        print(f"{a} / 0 = ", end="")
+        print(divide(a, 0))
+    except ValueError as e:
+        print(f"Error: {e}")
 
-    def calculate(self, operation, a, b):
-        if operation in self.operations:
-            return self.operations[operation](a, b)
-        else:
-            raise ValueError(f"Unsupported operation: {operation}")
+if __name__ == "__main__":
+    main()
